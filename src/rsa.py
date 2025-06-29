@@ -1,85 +1,17 @@
-import random
 import math
+from math_utils import MathUtils
 from typing import Tuple, List
 
 class RSA:
     def __init__(self, key_size: int = 1024):
         """
         Initialize RSA with specified key size in bits.
-        For demonstration, we'll use smaller default keys.
+        Default jey size to be 1024
         """
         self.key_size = key_size
         self.public_key = None
         self.private_key = None
     
-    def is_prime(self, n: int, k: int = 5) -> bool:
-        """
-        Miller-Rabin primality test.
-        Returns True if n is probably prime, False if composite.
-        """
-        if n < 2:
-            return False
-        if n == 2 or n == 3:
-            return True
-        if n % 2 == 0:
-            return False
-        
-        # Write n-1 as d * 2^r
-        r = 0
-        d = n - 1
-        while d % 2 == 0:
-            r += 1
-            d //= 2
-        
-        # Perform k rounds of testing
-        for _ in range(k):
-            a = random.randrange(2, n - 1)
-            x = pow(a, d, n)
-            
-            if x == 1 or x == n - 1:
-                continue
-            
-            for _ in range(r - 1):
-                x = pow(x, 2, n)
-                if x == n - 1:
-                    break
-            else:
-                return False
-        
-        return True
-    
-    def generate_prime(self, bits: int) -> int:
-        """Generate a random prime number with specified bit length."""
-        while True:
-            # Generate random odd number with specified bit length
-            candidate = random.getrandbits(bits)
-            candidate |= (1 << bits - 1) | 1  # Set MSB and LSB to 1
-            
-            if self.is_prime(candidate):
-                return candidate
-    
-    def extended_gcd(self, a: int, b: int) -> Tuple[int, int, int]:
-        """
-        Extended Euclidean Algorithm.
-        Returns (gcd, x, y) such that a*x + b*y = gcd(a, b).
-        """
-        if a == 0:
-            return b, 0, 1
-        
-        gcd, x1, y1 = self.extended_gcd(b % a, a)
-        x = y1 - (b // a) * x1
-        y = x1
-        
-        return gcd, x, y
-    
-    def mod_inverse(self, a: int, m: int) -> int:
-        """Calculate modular inverse of a modulo m."""
-        gcd, x, _ = self.extended_gcd(a, m)
-        
-        if gcd != 1:
-            raise ValueError("Modular inverse does not exist")
-        
-        return (x % m + m) % m
     
     def generate_keypair(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         """
@@ -87,12 +19,12 @@ class RSA:
         Returns ((e, n), (d, n)) where (e, n) is public key and (d, n) is private key.
         """
         # Generate two distinct prime numbers
-        p = self.generate_prime(self.key_size // 2)
-        q = self.generate_prime(self.key_size // 2)
+        p = MathUtils.generate_prime(self.key_size // 2)
+        q = MathUtils.generate_prime(self.key_size // 2)
         
         # Ensure p and q are different
         while p == q:
-            q = self.generate_prime(self.key_size // 2)
+            q = MathUtils.generate_prime(self.key_size // 2)
         
         # Calculate n = p * q
         n = p * q
@@ -107,7 +39,7 @@ class RSA:
             e += 2
         
         # Calculate d, the modular inverse of e modulo φ(n)
-        d = self.mod_inverse(e, phi_n)
+        d = MathUtils.mod_inverse(e, phi_n)
         
         # Store keys
         self.public_key = (e, n)
@@ -221,7 +153,7 @@ if __name__ == "__main__":
     print()
     
     # Test with string message
-    string_message = "Hello, RSA Encryption! How are you"
+    string_message = input("Enter the message you want to encrypt: ")
     print(f"Original message (string): '{string_message}'")
     
     encrypted_blocks = rsa.encrypt_string(string_message)
