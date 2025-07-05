@@ -42,14 +42,14 @@ class RSAGUI:
 
         ttk.Label(tab, text="Key Length (bits):").pack()
         self.key_length = tk.IntVar(value=256)
-        ttk.Entry(tab, textvariable=self.key_length).pack()
+        ttk.Entry(tab, textvariable=self.key_length, width=20).pack(padx=5, pady=5)
 
         ttk.Label(tab, text="Algorithm:").pack()
         self.keygen_algo = tk.StringVar(value="RSA")
         ttk.OptionMenu(tab, self.keygen_algo, "RSA", *KEYGEN_ALGOS.keys()).pack()
 
         ttk.Button(tab, text="Generate Keys", command=self.generate_keys).pack(pady=5)
-        self.key_output = scrolledtext.ScrolledText(tab, height=5)
+        self.key_output = scrolledtext.ScrolledText(tab, height=10, width=90, font=("Courier", 12))
         self.key_output.pack()
 
     def build_encrypt_tab(self):
@@ -61,18 +61,18 @@ class RSAGUI:
 
         ttk.Label(frame, text="e:").grid(row=0, column=0)
         self.encrypt_e = tk.StringVar()
-        ttk.Entry(frame, textvariable=self.encrypt_e, width=20).grid(row=0, column=1)
+        ttk.Entry(frame, textvariable=self.encrypt_e, width=30).grid(row=0, column=1, padx=5, pady=5)
 
         ttk.Label(frame, text="n:").grid(row=0, column=2)
         self.encrypt_n = tk.StringVar()
-        ttk.Entry(frame, textvariable=self.encrypt_n, width=40).grid(row=0, column=3)
+        ttk.Entry(frame, textvariable=self.encrypt_n, width=60).grid(row=0, column=3, padx=5, pady=5)
 
         ttk.Label(tab, text="Message:").pack()
         self.encrypt_msg = tk.StringVar()
-        ttk.Entry(tab, textvariable=self.encrypt_msg).pack()
+        ttk.Entry(tab, textvariable=self.encrypt_msg, width=90).pack(padx=5, pady=5)
 
         ttk.Button(tab, text="Encrypt", command=self.encrypt_message).pack(pady=5)
-        self.encrypt_output = scrolledtext.ScrolledText(tab, height=5)
+        self.encrypt_output = scrolledtext.ScrolledText(tab, height=10, width=90, font=("Courier", 12))
         self.encrypt_output.pack()
 
     def build_decrypt_tab(self):
@@ -84,19 +84,19 @@ class RSAGUI:
 
         ttk.Label(frame, text="d:").grid(row=0, column=0)
         self.decrypt_d = tk.StringVar()
-        ttk.Entry(frame, textvariable=self.decrypt_d, width=20).grid(row=0, column=1)
+        ttk.Entry(frame, textvariable=self.decrypt_d, width=30).grid(row=0, column=1, padx=5, pady=5)
 
         ttk.Label(frame, text="n:").grid(row=0, column=2)
         self.decrypt_n = tk.StringVar()
-        ttk.Entry(frame, textvariable=self.decrypt_n, width=40).grid(row=0, column=3)
+        ttk.Entry(frame, textvariable=self.decrypt_n, width=60).grid(row=0, column=3, padx=5, pady=5)
 
 
         ttk.Label(tab, text="Encrypted Blocks (space-separated):").pack()
         self.decrypt_msg = tk.StringVar()
-        ttk.Entry(tab, textvariable=self.decrypt_msg).pack()
+        ttk.Entry(tab, textvariable=self.decrypt_msg, width=90).pack(padx=5, pady=5)
 
         ttk.Button(tab, text="Decrypt", command=self.decrypt_message).pack(pady=5)
-        self.decrypt_output = scrolledtext.ScrolledText(tab, height=5)
+        self.decrypt_output = scrolledtext.ScrolledText(tab, height=10, width=90, font=("Courier", 12))
         self.decrypt_output.pack()
 
     def build_break_tab(self):
@@ -108,11 +108,11 @@ class RSAGUI:
 
         ttk.Label(frame, text="e:").grid(row=0, column=0)
         self.break_e = tk.StringVar()
-        ttk.Entry(frame, textvariable=self.break_e, width=20).grid(row=0, column=1)
+        ttk.Entry(frame, textvariable=self.break_e, width=30).grid(row=0, column=1, padx=5, pady=5)
 
         ttk.Label(frame, text="n:").grid(row=0, column=2)
         self.break_n = tk.StringVar()
-        ttk.Entry(frame, textvariable=self.break_n, width=40).grid(row=0, column=3)
+        ttk.Entry(frame, textvariable=self.break_n, width=60).grid(row=0, column=3, padx=5, pady=5)
 
 
         ttk.Label(tab, text="Algorithm:").pack()
@@ -121,7 +121,8 @@ class RSAGUI:
 
         ttk.Button(tab, text="Break Key", command=self.break_key_threaded).pack(pady=5)
         ttk.Button(tab, text="Stop Breaking", command=self.stop_breaking_rsa).pack(pady=5)
-        self.break_output = scrolledtext.ScrolledText(tab, height=6)
+        self.break_output = scrolledtext.ScrolledText(tab, height=10, width=90, font=("Courier", 12))
+
         self.break_output.pack()
 
     def generate_keys(self):
