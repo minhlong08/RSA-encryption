@@ -159,6 +159,7 @@ if __name__ == '__main__':
     print("✅ Server is running!")
     print()
     print("📋 How to use:")
+    print("Requirement: install flask using 'pip install flask'")
     print("   1. Open your web browser")
     print("   2. Go to: http://127.0.0.1:5000")
     print("   3. Start using the RSA demo!")
