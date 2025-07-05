@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RSA Demo</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 1000px; 
+            margin: auto; 
+            padding: 20px; 
+            background-color: #f5f5f5;
+        }
+        
+        .section { 
+            background: white;
+            margin-bottom: 30px; 
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #444;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        
+        input, select, button, textarea { 
+            width: 100%; 
+            margin: 8px 0; 
+            padding: 12px; 
+            font-size: 1em; 
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .key-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .key-box {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+        
+        .key-box h3 {
+            margin-top: 0;
+            color: #495057;
+            font-size: 1.1em;
+        }
+        
+        .key-value {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 5px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+            min-height: 20px;
+        }
+        
+        .copy-btn {
+            width: auto;
+            padding: 6px 12px;
+            margin: 5px 5px 5px 0;
+            font-size: 0.85em;
+            background-color: #28a745;
+        }
+        
+        .copy-btn:hover {
+            background-color: #218838;
+        }
+        
+        .result-box {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+            min-height: 40px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .status-indicator {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            color: #856404;
+            font-weight: bold;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .key-container {
+                flex-direction: column;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>RSA Encryption Demo</h1>
+
+    <div class="section">
+        <h2>1. Key Generation</h2>
+        <select id="keygen_algo">
+            <option value="RSA">RSA</option>
+            <option value="RSA_simple">RSA_simple</option>
+        </select>
+        <input id="keygen_bits" type="number" placeholder="Key size (e.g. 256, 512)" min="1" max="512">
+        <button onclick="generateKey()">Generate Key</button>
+        
+        <div class="key-container" id="key_container" style="display: none;">
+            <div class="key-box">
+                <h3>Public Key</h3>
+                <label>e (public exponent):</label>
+                <div class="key-value" id="public_e"></div>
+                <button class="copy-btn" onclick="copyToClipboard('public_e')">Copy e</button>
+                
+                <label>n (modulus):</label>
+                <div class="key-value" id="public_n"></div>
+                <button class="copy-btn" onclick="copyToClipboard('public_n')">Copy n</button>
+            </div>
+            
+            <div class="key-box">
+                <h3>Private Key</h3>
+                <label>d (private exponent):</label>
+                <div class="key-value" id="private_d"></div>
+                <button class="copy-btn" onclick="copyToClipboard('private_d')">Copy d</button>
+                
+                <label>n (modulus):</label>
+                <div class="key-value" id="private_n"></div>
+                <button class="copy-btn" onclick="copyToClipboard('private_n')">Copy n</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>2. Encryption</h2>
+        <input id="encrypt_e" placeholder="Public key e">
+        <input id="encrypt_n" placeholder="Public key n">
+        <textarea id="plaintext" placeholder="Text to encrypt" rows="3"></textarea>
+        <button onclick="encryptText()">Encrypt</button>
+        
+        <label><strong>Encrypted Message:</strong></label>
+        <div class="result-box" id="ciphertext"></div>
+        <button class="copy-btn" onclick="copyToClipboard('ciphertext')">Copy Encrypted Message</button>
+    </div>
+
+    <div class="section">
+        <h2>3. Decryption</h2>
+        <input id="decrypt_d" placeholder="Private key d">
+        <input id="decrypt_n" placeholder="Private key n">
+        <textarea id="cipher_in" placeholder="Encrypted text" rows="3"></textarea>
+        <button onclick="decryptText()">Decrypt</button>
+        
+        <label><strong>Decrypted Message:</strong></label>
+        <div class="result-box" id="decrypted"></div>
+        <button class="copy-btn" onclick="copyToClipboard('decrypted')">Copy Decrypted Message</button>
+    </div>
+
+    <div class="section">
+        <h2>4. Break RSA Key</h2>
+        <input id="break_e" placeholder="Public key e">
+        <input id="break_n" placeholder="Public key n">
+        <select id="break_algo">
+            <option value="naive">Naive</option>
+            <option value="fermat">Fermat</option>
+            <option value="pollard_rho">Pollard Rho</option>
+        </select>
+        
+        <div class="button-group">
+            <button onclick="breakKey()" id="break_btn">Break Key</button>
+            <button onclick="stopBreak()" id="stop_btn">Stop Breaking</button>
+        </div>
+        
+        <div id="break_status" class="status-indicator" style="display: none;"></div>
+        
+        <label><strong>Breaking Result:</strong></label>
+        <div class="result-box" id="break_result"></div>
+    </div>
+
+<script>
+function generateKey() {
+    const algo = document.getElementById('keygen_algo').value;
+    const bits = document.getElementById('keygen_bits').value;
+    
+    if (!bits || bits < 1) {
+        alert('Please enter a valid key size');
+        return;
+    }
+    
+    fetch('/generate_key', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({algo, bits})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
+        }
+        
+        // Display keys in separate boxes
+        document.getElementById('public_e').textContent = data.public.e;
+        document.getElementById('public_n').textContent = data.public.n;
+        document.getElementById('private_d').textContent = data.private.d;
+        document.getElementById('private_n').textContent = data.private.n;
+        
+        // Show the key container
+        document.getElementById('key_container').style.display = 'flex';
+        
+
+    })
+    .catch(err => alert('Error: ' + err.message));
+}
+
+function encryptText() {
+    const e = document.getElementById('encrypt_e').value;
+    const n = document.getElementById('encrypt_n').value;
+    const text = document.getElementById('plaintext').value;
+    
+    if (!e || !n || !text) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    fetch('/encrypt', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({e, n, text})
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('ciphertext').textContent = data.result;
+    })
+    .catch(err => alert('Error: ' + err.message));
+}
+
+function decryptText() {
+    const d = document.getElementById('decrypt_d').value;
+    const n = document.getElementById('decrypt_n').value;
+    const text = document.getElementById('cipher_in').value;
+    
+    if (!d || !n || !text) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    fetch('/decrypt', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({d, n, text})
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('decrypted').textContent = data.result;
+    })
+    .catch(err => alert('Error: ' + err.message));
+}
+
+function breakKey() {
+    const e = document.getElementById('break_e').value;
+    const n = document.getElementById('break_n').value;
+    const algo = document.getElementById('break_algo').value;
+    
+    if (!e || !n) {
+        alert('Please fill in the public key fields');
+        return;
+    }
+    
+    // Show status and disable button
+    const statusDiv = document.getElementById('break_status');
+    const breakBtn = document.getElementById('break_btn');
+    const stopBtn = document.getElementById('stop_btn');
+    const resultDiv = document.getElementById('break_result');
+    
+    statusDiv.style.display = 'block';
+    statusDiv.textContent = `Running ${algo} algorithm to break RSA key...`;
+    breakBtn.disabled = true;
+    breakBtn.textContent = 'Breaking...';
+    stopBtn.disabled = false;
+    resultDiv.textContent = '';
+    
+    const startTime = Date.now();
+    
+    fetch('/break_rsa', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({e, n, algo})
+    })
+    .then(res => res.json())
+    .then(data => {
+        const endTime = Date.now();
+        const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
+        
+        // Hide status and enable button
+        statusDiv.style.display = 'none';
+        breakBtn.disabled = false;
+        breakBtn.textContent = 'Break Key';
+        stopBtn.disabled = true;
+        
+        // Display result with time taken
+        let resultText = data.result;
+        if (!resultText.includes('Time:') && !resultText.includes('Error:') && !resultText.includes('Failed') && !resultText.includes('stopped')) {
+            resultText += `\nTime taken: ${timeTaken} seconds`;
+        }
+        
+        resultDiv.textContent = resultText;
+    })
+    .catch(err => {
+        // Hide status and enable button
+        statusDiv.style.display = 'none';
+        breakBtn.disabled = false;
+        breakBtn.textContent = 'Break Key';
+        stopBtn.disabled = true;
+        
+        resultDiv.textContent = 'Error: ' + err.message;
+    });
+}
+
+function stopBreak() {
+    const statusDiv = document.getElementById('break_status');
+    const breakBtn = document.getElementById('break_btn');
+    const stopBtn = document.getElementById('stop_btn');
+    const resultDiv = document.getElementById('break_result');
+    
+    // Show stopping message
+    statusDiv.textContent = 'Stopping breaking process...';
+    stopBtn.disabled = true;
+    stopBtn.textContent = 'Stopping...';
+    
+    fetch('/stop_break', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(res => res.json())
+    .then(data => {
+        // Reset UI state
+        statusDiv.style.display = 'none';
+        breakBtn.disabled = false;
+        breakBtn.textContent = 'Break Key';
+        stopBtn.disabled = true;
+        stopBtn.textContent = 'Stop Breaking';
+        
+        // Show result if breaking was actually stopped
+        if (data.stopped) {
+            resultDiv.textContent = 'Breaking process was stopped by user.';
+        }
+        
+    })
+    .catch(err => {
+        // Reset UI state
+        statusDiv.style.display = 'none';
+        breakBtn.disabled = false;
+        breakBtn.textContent = 'Break Key';
+        stopBtn.disabled = true;
+        stopBtn.textContent = 'Stop Breaking';
+        
+        resultDiv.textContent = 'Error stopping process: ' + err.message;
+    });
+}
+
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent;
+    
+    if (!text || text.trim() === '') {
+        alert('Nothing to copy');
+        return;
+    }
+    
+    navigator.clipboard.writeText(text).then(function() {
+        // Visual feedback
+        const originalBg = element.style.backgroundColor;
+        element.style.backgroundColor = '#d4edda';
+        element.style.transition = 'background-color 0.3s';
+        
+        setTimeout(() => {
+            element.style.backgroundColor = originalBg;
+        }, 500);
+        
+        // Button feedback
+        const buttons = document.querySelectorAll('.copy-btn');
+        buttons.forEach(btn => {
+            if (btn.onclick.toString().includes(elementId)) {
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 1000);
+            }
+        });
+    }).catch(function(err) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        alert('Copied to clipboard');
+    });
+}
+</script>
+
+</body>
+</html>
