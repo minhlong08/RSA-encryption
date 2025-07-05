@@ -4,7 +4,6 @@ import threading
 import time
 import importlib
 
-# Import RSA modules
 import rsa
 import rsa_simple
 import breaking_rsa
@@ -57,9 +56,16 @@ class RSAGUI:
         tab = ttk.Frame(self.notebook)
         self.notebook.add(tab, text="Encrypt")
 
-        ttk.Label(tab, text="Public Key (e,n):").pack()
-        self.encrypt_key = tk.StringVar()
-        ttk.Entry(tab, textvariable=self.encrypt_key).pack()
+        frame = ttk.Frame(tab)
+        frame.pack()
+
+        ttk.Label(frame, text="e:").grid(row=0, column=0)
+        self.encrypt_e = tk.StringVar()
+        ttk.Entry(frame, textvariable=self.encrypt_e, width=20).grid(row=0, column=1)
+
+        ttk.Label(frame, text="n:").grid(row=0, column=2)
+        self.encrypt_n = tk.StringVar()
+        ttk.Entry(frame, textvariable=self.encrypt_n, width=40).grid(row=0, column=3)
 
         ttk.Label(tab, text="Message:").pack()
         self.encrypt_msg = tk.StringVar()
@@ -73,9 +79,17 @@ class RSAGUI:
         tab = ttk.Frame(self.notebook)
         self.notebook.add(tab, text="Decrypt")
 
-        ttk.Label(tab, text="Private Key (d,n):").pack()
-        self.decrypt_key = tk.StringVar()
-        ttk.Entry(tab, textvariable=self.decrypt_key).pack()
+        frame = ttk.Frame(tab)
+        frame.pack()
+
+        ttk.Label(frame, text="d:").grid(row=0, column=0)
+        self.decrypt_d = tk.StringVar()
+        ttk.Entry(frame, textvariable=self.decrypt_d, width=20).grid(row=0, column=1)
+
+        ttk.Label(frame, text="n:").grid(row=0, column=2)
+        self.decrypt_n = tk.StringVar()
+        ttk.Entry(frame, textvariable=self.decrypt_n, width=40).grid(row=0, column=3)
+
 
         ttk.Label(tab, text="Encrypted Blocks (space-separated):").pack()
         self.decrypt_msg = tk.StringVar()
@@ -89,9 +103,17 @@ class RSAGUI:
         tab = ttk.Frame(self.notebook)
         self.notebook.add(tab, text="Break RSA")
 
-        ttk.Label(tab, text="Public Key (e,n):").pack()
-        self.break_key = tk.StringVar()
-        ttk.Entry(tab, textvariable=self.break_key).pack()
+        frame = ttk.Frame(tab)
+        frame.pack()
+
+        ttk.Label(frame, text="e:").grid(row=0, column=0)
+        self.break_e = tk.StringVar()
+        ttk.Entry(frame, textvariable=self.break_e, width=20).grid(row=0, column=1)
+
+        ttk.Label(frame, text="n:").grid(row=0, column=2)
+        self.break_n = tk.StringVar()
+        ttk.Entry(frame, textvariable=self.break_n, width=40).grid(row=0, column=3)
+
 
         ttk.Label(tab, text="Algorithm:").pack()
         self.break_algo = tk.StringVar(value="naive")
@@ -117,8 +139,8 @@ class RSAGUI:
 
     def encrypt_message(self):
         try:
-            e_str, n_str = self.encrypt_key.get().split(",")
-            e, n = int(e_str.strip()), int(n_str.strip())
+            e = int(self.encrypt_e.get().strip())
+            n = int(self.encrypt_n.get().strip())
             msg = self.encrypt_msg.get()
 
             rsa_instance = rsa.RSA()
@@ -130,10 +152,11 @@ class RSAGUI:
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
+
     def decrypt_message(self):
         try:
-            d_str, n_str = self.decrypt_key.get().split(",")
-            d, n = int(d_str.strip()), int(n_str.strip())
+            d = int(self.decrypt_d.get().strip())
+            n = int(self.decrypt_n.get().strip())
             blocks = list(map(int, self.decrypt_msg.get().split()))
 
             rsa_instance = rsa.RSA()
@@ -144,6 +167,7 @@ class RSAGUI:
             self.decrypt_output.insert(tk.END, msg)
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
 
 
     def break_key_threaded(self):
@@ -159,8 +183,9 @@ class RSAGUI:
         global stop_breaking
         stop_breaking = False
         try:
-            e_str, n_str = self.break_key.get().split(",")
-            e, n = int(e_str.strip()), int(n_str.strip())
+            e = int(self.break_e.get().strip())
+            n = int(self.break_n.get().strip())
+
             algo = self.break_algo.get()
             self.break_output.delete("1.0", tk.END)
             self.break_output.insert(tk.END, "Breaking started...\n")
