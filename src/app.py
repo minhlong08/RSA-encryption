@@ -3,6 +3,7 @@ import threading
 import time
 import rsa
 import rsa_simple
+import rsa_pkcs
 import breaking_rsa
 
 app = Flask(__name__)
@@ -32,44 +33,82 @@ def generate_key():
     if algo not in KEYGEN_ALGOS:
         return jsonify({"error": "Invalid algorithm"})
     
-    pub, priv = KEYGEN_ALGOS[algo](bits)
-
-    public_key = {"e": str(pub[0]), "n": str(pub[1])}
-    private_key = {"d": str(priv[0]), "n": str(priv[1])}
-
-    return jsonify({"public": public_key, "private": private_key})
+    try:
+        pub, priv = KEYGEN_ALGOS[algo](bits)
+        public_key = {"e": str(pub[0]), "n": str(pub[1])}
+        private_key = {"d": str(priv[0]), "n": str(priv[1])}
+        return jsonify({"public": public_key, "private": private_key})
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 @app.route('/encrypt', methods=['POST'])
 def encrypt():
     data = request.get_json()
-    e, n, text = int(data['e']), int(data['n']), data['text']
-    blocks = [pow(ord(c), e, n) for c in text]
-    return jsonify({"result": ' '.join(map(str, blocks))})
+    e, n, text, algo = int(data['e']), int(data['n']), data['text'], data.get('algo', 'RSA')
+    
+    try:
+        if algo == 'RSA':
+            # Normal RSA with no padding
+            rsa_instance = rsa.RSA()
+            public_key = (e, n)
+            encrypted_blocks = rsa_instance.encrypt_string(text, public_key)
+            result = ' '.join(map(str, encrypted_blocks))
+        elif algo == 'RSA(PKCS#1 v1.5)':
+            rsa_pkcs_instance = rsa_pkcs.RSAWithPKCS1()
+            public_key = (e, n)
+
+            # check key length requirement
+            if n.bit_length() < 96:
+                return jsonify({"result": f"Key length too short, must be at least 96 bits"})
+            
+            encrypted_blocks = rsa_pkcs_instance.encrypt_string(text, public_key)
+            result = ' '.join(map(str, encrypted_blocks))
+        else:  # RSA_simple
+            # Naive version of RSA (inefficient, byte to byte encrypting)
+            rsa_simple_instance = rsa_simple.RSA_SIMPLE()
+            public_key = (e, n)
+            encrypted_blocks = rsa_simple_instance.encrypt(text, public_key)
+            result = ' '.join(map(str, encrypted_blocks))
+        
+        return jsonify({"result": result})
+    except Exception as ex:
+        return jsonify({"result": f"Encryption failed: {str(ex)}"})
 
 @app.route('/decrypt', methods=['POST'])
 def decrypt():
     data = request.get_json()
-    d, n, text = int(data['d']), int(data['n']), data['text']
-    blocks = text.strip().split()
+    d, n, text, algo = int(data['d']), int(data['n']), data['text'], data.get('algo', 'RSA')
+    
     try:
-        decrypted_chars = []
-        for b in blocks:
-            decrypted_val = pow(int(b), d, n)
-            # Check if the decrypted value is within valid Unicode range
-            if 0 <= decrypted_val <= 1114111:
-                decrypted_chars.append(chr(decrypted_val))
-            else:
-                # If value is too large, it might be corrupted or wrong key
-                return jsonify({"result": f"Decryption failed: Invalid character value {decrypted_val}"})
+        if algo == 'RSA':
+            # Use RSA class for decryption
+            rsa_instance = rsa.RSA()
+            private_key = (d, n)
+            
+            # Parse encrypted blocks
+            encrypted_blocks = [int(block) for block in text.strip().split()]
+            result = rsa_instance.decrypt_string(encrypted_blocks, private_key)
+        elif algo == 'RSA(PKCS#1 v1.5)':
+            rsa_pkcs_instance = rsa_pkcs.RSAWithPKCS1()
+            private_key = (d,n)
+
+            # Parse encrypted blocks
+            encrypted_blocks = [int(block) for block in text.strip().split()]
+            result = rsa_pkcs_instance.decrypt_string(encrypted_blocks, private_key)
+        else:  # RSA_simple
+            # Use RSA_SIMPLE class for decryption
+            rsa_simple_instance = rsa_simple.RSA_SIMPLE()
+            private_key = (d, n)
+            
+            # Parse encrypted blocks
+            encrypted_blocks = [int(block) for block in text.strip().split()]
+            result = rsa_simple_instance.decrypt(encrypted_blocks, private_key)
         
-        result = ''.join(decrypted_chars)
+        return jsonify({"result": result})
     except ValueError as e:
         return jsonify({"result": f"Decryption failed: Invalid input - {str(e)}"})
-    except OverflowError as e:
-        return jsonify({"result": f"Decryption failed: Number too large - {str(e)}"})
     except Exception as e:
-        return jsonify({"result": "Decryption failed: " + str(e)})
-    return jsonify({"result": result})
+        return jsonify({"result": f"Decryption failed: {str(e)}"})
 
 @app.route('/break_rsa', methods=['POST'])
 def break_rsa():

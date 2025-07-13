@@ -136,6 +136,27 @@
             flex: 1;
         }
         
+        .quick-fill-btn {
+            width: auto;
+            padding: 6px 12px;
+            margin: 5px 5px 5px 0;
+            font-size: 0.85em;
+            background-color: #17a2b8;
+        }
+        
+        .quick-fill-btn:hover {
+            background-color: #138496;
+        }
+        
+        .algo-info {
+            background-color: #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #495057;
+        }
+        
         @media (max-width: 768px) {
             .key-container {
                 flex-direction: column;
@@ -186,10 +207,21 @@
 
     <div class="section">
         <h2>2. Encryption</h2>
+        <select id="encrypt_algo">
+            <option value="RSA">RSA</option>
+            <option value="RSA_simple">RSA_simple</option>
+            <option value="RSA(PKCS#1 v1.5)">RSA(PKCS#1 v1.5)</option>
+        </select>
         <input id="encrypt_e" placeholder="Public key e">
         <input id="encrypt_n" placeholder="Public key n">
+        <button class="quick-fill-btn" onclick="quickFillEncrypt()">Quick Fill from Generated Keys</button>
         <textarea id="plaintext" placeholder="Text to encrypt" rows="3"></textarea>
         <button onclick="encryptText()">Encrypt</button>
+        
+        <div class="algo-info">
+            <strong>Algorithm Info:</strong> 
+            <span id="encrypt_algo_info">RSA uses block-based encryption based on key size</span>
+        </div>
         
         <label><strong>Encrypted Message:</strong></label>
         <div class="result-box" id="ciphertext"></div>
@@ -198,10 +230,18 @@
 
     <div class="section">
         <h2>3. Decryption</h2>
+        <select id="decrypt_algo">
+            <option value="RSA">RSA</option>
+            <option value="RSA_simple">RSA_simple</option>
+            <option value="RSA(PKCS#1 v1.5)">RSA(PKCS#1 v1.5)</option>
+        </select>
         <input id="decrypt_d" placeholder="Private key d">
         <input id="decrypt_n" placeholder="Private key n">
+        <button class="quick-fill-btn" onclick="quickFillDecrypt()">Quick Fill from Generated Keys</button>
         <textarea id="cipher_in" placeholder="Encrypted text" rows="3"></textarea>
+        <button class="quick-fill-btn" onclick="quickFillCiphertext()">Quick Fill from Encrypted Message</button>
         <button onclick="decryptText()">Decrypt</button>
+        
         
         <label><strong>Decrypted Message:</strong></label>
         <div class="result-box" id="decrypted"></div>
@@ -212,6 +252,7 @@
         <h2>4. Break RSA Key</h2>
         <input id="break_e" placeholder="Public key e">
         <input id="break_n" placeholder="Public key n">
+        <button class="quick-fill-btn" onclick="quickFillBreak()">Quick Fill from Generated Keys</button>
         <select id="break_algo">
             <option value="naive">Naive</option>
             <option value="fermat">Fermat</option>
@@ -230,6 +271,9 @@
     </div>
 
 <script>
+// Store the last generated algorithm for quick fill
+let lastGeneratedAlgo = 'RSA';
+
 function generateKey() {
     const algo = document.getElementById('keygen_algo').value;
     const bits = document.getElementById('keygen_bits').value;
@@ -251,6 +295,9 @@ function generateKey() {
             return;
         }
         
+        // Store the algorithm used for quick fill
+        lastGeneratedAlgo = algo;
+        
         // Display keys in separate boxes
         document.getElementById('public_e').textContent = data.public.e;
         document.getElementById('public_n').textContent = data.public.n;
@@ -259,13 +306,12 @@ function generateKey() {
         
         // Show the key container
         document.getElementById('key_container').style.display = 'flex';
-        
-
     })
     .catch(err => alert('Error: ' + err.message));
 }
 
 function encryptText() {
+    const algo = document.getElementById('encrypt_algo').value;
     const e = document.getElementById('encrypt_e').value;
     const n = document.getElementById('encrypt_n').value;
     const text = document.getElementById('plaintext').value;
@@ -278,7 +324,7 @@ function encryptText() {
     fetch('/encrypt', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({e, n, text})
+        body: JSON.stringify({e, n, text, algo})
     })
     .then(res => res.json())
     .then(data => {
@@ -288,6 +334,7 @@ function encryptText() {
 }
 
 function decryptText() {
+    const algo = document.getElementById('decrypt_algo').value;
     const d = document.getElementById('decrypt_d').value;
     const n = document.getElementById('decrypt_n').value;
     const text = document.getElementById('cipher_in').value;
@@ -300,7 +347,7 @@ function decryptText() {
     fetch('/decrypt', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({d, n, text})
+        body: JSON.stringify({d, n, text, algo})
     })
     .then(res => res.json())
     .then(data => {
@@ -411,6 +458,77 @@ function stopBreak() {
     });
 }
 
+function quickFillEncrypt() {
+    const publicE = document.getElementById('public_e').textContent;
+    const publicN = document.getElementById('public_n').textContent;
+    
+    if (!publicE || !publicN) {
+        alert('Please generate keys first');
+        return;
+    }
+    
+    document.getElementById('encrypt_e').value = publicE;
+    document.getElementById('encrypt_n').value = publicN;
+    document.getElementById('encrypt_algo').value = lastGeneratedAlgo;
+    updateAlgoInfo();
+}
+
+function quickFillDecrypt() {
+    const privateD = document.getElementById('private_d').textContent;
+    const privateN = document.getElementById('private_n').textContent;
+    
+    if (!privateD || !privateN) {
+        alert('Please generate keys first');
+        return;
+    }
+    
+    document.getElementById('decrypt_d').value = privateD;
+    document.getElementById('decrypt_n').value = privateN;
+    document.getElementById('decrypt_algo').value = lastGeneratedAlgo;
+    updateAlgoInfo();
+}
+
+function quickFillCiphertext() {
+    const ciphertext = document.getElementById('ciphertext').textContent;
+    
+    if (!ciphertext) {
+        alert('Please encrypt a message first');
+        return;
+    }
+    
+    document.getElementById('cipher_in').value = ciphertext;
+}
+
+function quickFillBreak() {
+    const publicE = document.getElementById('public_e').textContent;
+    const publicN = document.getElementById('public_n').textContent;
+    
+    if (!publicE || !publicN) {
+        alert('Please generate keys first');
+        return;
+    }
+    
+    document.getElementById('break_e').value = publicE;
+    document.getElementById('break_n').value = publicN;
+}
+
+function updateAlgoInfo() {
+    const encryptAlgo = document.getElementById('encrypt_algo').value;
+    const decryptAlgo = document.getElementById('decrypt_algo').value;
+    
+    const encryptInfo = document.getElementById('encrypt_algo_info');
+    const decryptInfo = document.getElementById('decrypt_algo_info');
+    
+    if (encryptAlgo === 'RSA') {
+        encryptInfo.textContent = 'RSA uses block-based encryption based on key size';
+    } else if (encryptAlgo === 'RSA(PKCS#1 v1.5)') {
+        encryptInfo.textContent = 'Rsa with PKCS#1 v1.5 padding scheme';
+    } else {
+        encryptInfo.textContent = 'RSA_simple uses byte-by-byte encryption';
+    }
+    
+}
+
 function copyToClipboard(elementId) {
     const element = document.getElementById(elementId);
     const text = element.textContent;
@@ -453,6 +571,15 @@ function copyToClipboard(elementId) {
         alert('Copied to clipboard');
     });
 }
+
+// Add event listeners for algorithm selection changes
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('encrypt_algo').addEventListener('change', updateAlgoInfo);
+    document.getElementById('decrypt_algo').addEventListener('change', updateAlgoInfo);
+    
+    // Initialize algorithm info
+    updateAlgoInfo();
+});
 </script>
 
 </body>
