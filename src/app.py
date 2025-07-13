@@ -102,7 +102,7 @@ def break_rsa():
             if private_key_tuple and private_key_tuple[0] is not None:
                 # The breaking algorithms return (d, n) where d is the private key
                 d, n_returned = private_key_tuple
-                result["result"] = f"Successfully broke RSA key!\nPrivate key (d, n): ({d}, {n_returned})\nTime: {end - start:.2f} sec"
+                result["result"] = f"Successfully broke RSA key!\nPrivate key (d, n): ({d}, {n_returned})\nTime: {end - start:.9f} sec"
             else:
                 result["result"] = "Failed to break key - no factors found."
                 
@@ -115,7 +115,7 @@ def break_rsa():
     thread = threading.Thread(target=target)
     thread.start()
     running_threads['breaker'] = thread
-    thread.join(timeout=300)  # 5 minutes
+    thread.join(timeout=86400)  # 1 day
 
     if thread.is_alive():
         result["result"] = "Breaking algorithm takes too long."

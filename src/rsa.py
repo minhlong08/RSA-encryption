@@ -1,4 +1,5 @@
 import math
+import time
 from math_utils import MathUtils
 from typing import Tuple, List
 
@@ -11,6 +12,12 @@ class RSA:
         self.key_size = key_size
         self.public_key = None
         self.private_key = None
+    
+    def get_key_size(self) -> int:
+        """
+        Return the RSA key size in bits.
+        """
+        return self.key_size
     
     
     def generate_keypair(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
@@ -35,7 +42,7 @@ class RSA:
         # Choose e such that 1 < e < φ(n) and gcd(e, φ(n)) = 1
         # Common choice is 65537 (2^16 + 1)
         e = 65537
-        while math.gcd(e, phi_n) != 1:
+        while math.gcd(e, phi_n) != 1:  
             e += 2
         
         # Calculate d, the modular inverse of e modulo φ(n)
@@ -131,10 +138,15 @@ class RSA:
 # Example usage and demonstration
 if __name__ == "__main__":
     # Create RSA instance with smaller key size for faster demonstration
-    rsa = RSA(key_size=512)  # Use 2048 or higher for real applications
+    rsa = RSA(key_size=16)  # Use 2048 or higher for real applications
     
+    startime = time.time()
     print("Generating RSA key pair...")
     public_key, private_key = rsa.generate_keypair()
+    endtime = time.time()
+
+    runtime = endtime - startime
+    print(f"Key generation (keysize = {rsa.get_key_size()}) took {runtime:.6f} seconds")
     
     print(f"Public Key (e, n): ({public_key[0]}, {public_key[1]})")
     print(f"Private Key (d, n): ({private_key[0]}, {private_key[1]})")

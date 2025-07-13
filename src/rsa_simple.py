@@ -1,5 +1,6 @@
 import random
 import math
+import time
 
 
 class RSA_SIMPLE:
@@ -46,7 +47,11 @@ class RSA_SIMPLE:
             while math.gcd(self.e, phi_n) != 1 or not self.is_prime(self.e):
                 self.e = random.randint(3, phi_n - 1)
             self.d = self.mod_inverse(self.e, phi_n)
-            break
+
+            public_key = (self.e, self.n)
+            priv_key = (self.d, self.n)
+            return public_key, priv_key
+
 
     def get_public_key(self):
         return (self.e, self.n)
@@ -76,7 +81,13 @@ class RSA_SIMPLE:
 
 if __name__ == "__main__":
     rsa = RSA_SIMPLE()
+
+    startime = time.time()
     rsa.generate_keys()
+    endtime = time.time()
+
+    runtime = endtime - startime
+    print(f"Key generation took {runtime:.6f} seconds")
 
     message = input("Enter your message to encrypt: ")
     print("Original Message:", message)
