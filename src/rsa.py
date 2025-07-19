@@ -1,3 +1,10 @@
+"""
+RSA Implementation
+=======================
+
+This module implements textbook RSA algorithm (no padding scheme included).
+
+"""
 import math
 import time
 from math_utils import MathUtils

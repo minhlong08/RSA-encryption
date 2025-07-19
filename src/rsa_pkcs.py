@@ -1,3 +1,11 @@
+"""
+RSA-PKCS#1 v1.5 Implementation
+=======================
+
+This module implements RSA with PKCS#1 v1.5 padding. This is the simplest padding scheme for RSA.
+
+"""
+
 import secrets
 from typing import Tuple, List
 from rsa import RSA
@@ -5,13 +13,9 @@ from rsa import RSA
 class RSAWithPKCS1(RSA):
     """
     RSA implementation with PKCS#1 v1.5 padding support.
-    Inherits from the base RSA class and adds padding functionality.
     """
     
     def __init__(self, key_size: int = 1024):
-        """
-        Initialize RSA with PKCS#1 v1.5 padding support.
-        """
         super().__init__(key_size)
     
     def _pkcs1_v15_pad(self, data: bytes, target_length: int, block_type: int = 2) -> bytes:
@@ -116,8 +120,7 @@ class RSAWithPKCS1(RSA):
         
         # Convert padded data to integer
         message_int = int.from_bytes(padded_data, byteorder='big')
-        
-        # Encrypt using parent class method
+
         return super().encrypt(message_int, public_key)
     
     def decrypt_with_padding(self, ciphertext: int, private_key: Tuple[int, int] = None) -> bytes:
@@ -177,11 +180,10 @@ class RSAWithPKCS1(RSA):
             key_length = (n.bit_length() + 7) // 8
             max_data_size = key_length - 11  # PKCS#1 v1.5 requires 11 bytes overhead
             
-            # Split message into blocks and encrypt each with padding
             for i in range(0, len(message_bytes), max_data_size):
                 block = message_bytes[i:i + max_data_size]
                 
-                # Encrypt block with padding
+                # encrypt
                 encrypted_block = self.encrypt_with_padding(block, public_key)
                 encrypted_blocks.append(encrypted_block)
         else:
