@@ -23,28 +23,13 @@ This repository contains my personal implementation of the RSA encryption algori
 
 
 ## 📂 Files Overview
-
-
-
-## 🔢 How It Works (Simplified)
-
-1. **Key Generation**
-   - Choose two large prime numbers `p` and `q`
-   - Compute `n = p * q`
-   - Compute Euler's totient `φ(n) = (p-1)*(q-1)`
-   - Choose an encryption exponent `e` requirement:
-   + `e` must be prime
-   + `1 < e < φ(n)`
-   + `gcd(e, φ(n)) = 1`
-   - Compute the decryption exponent `d` such that `d ≡ e⁻¹ mod φ(n)`
-   - Public key: `(e, n)`, Private key: `(d, n)`
-
-2. **Encryption**
-   - Convert message `M` to integer blocks `m`
-   - Compute ciphertext `c = m^e mod n`
-
-3. **Decryption**
-   - Compute plaintext `m = c^d mod n`
-   - Convert integer back to text
-
+- rsa_simple.py: most simple implementation of RSA
+- rsa.py: textbook implementation of RSA (no padding)
+- rsa_pkcs.py: rsa with PKCS#1 v1.5 padding scheme
+- rsa_oaep.py: rsa with OAEP padding scheme
+- math_utils.py: helper math functions (prime generation, extended Euclidean algorithm, mod_inverse)
+- breaking_rsa: algorithm to factor RSA keys
+- bleichenbacher_attack.py: simple demo of bleichenbacher chosen ciphertext attack on RSA PKCS#1 v1.5
+- app.py: flask backend for demo purposes
+- rsa_demo.py: GUI demo for RSA (obsolete)
 

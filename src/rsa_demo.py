@@ -1,3 +1,7 @@
+"""
+Simple GUI interface for demoing RSA.
+I stop updating this file so use the web frontend demo instead (app.py)
+"""
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 import threading
