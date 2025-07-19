@@ -4,6 +4,7 @@ import time
 import rsa
 import rsa_simple
 import rsa_pkcs
+import rsa_oaep
 import breaking_rsa
 
 app = Flask(__name__)
@@ -63,6 +64,16 @@ def encrypt():
             
             encrypted_blocks = rsa_pkcs_instance.encrypt_string(text, public_key)
             result = ' '.join(map(str, encrypted_blocks))
+        elif algo == 'RSA(OAEP)':
+            rsa_oaep_instance = rsa_oaep.RSA_OAEP()
+            public_key = (e, n)
+
+            # check key length requirement
+            if n.bit_length() < 536:
+                return jsonify({"result": f"Key length too short, must be at least 536 bits"})
+            
+            encrypted_blocks = rsa_oaep_instance.encrypt_string(text, public_key)
+            result = ' '.join(map(str, encrypted_blocks))
         else:  # RSA_simple
             # Naive version of RSA (inefficient, byte to byte encrypting)
             rsa_simple_instance = rsa_simple.RSA_SIMPLE()
@@ -95,6 +106,13 @@ def decrypt():
             # Parse encrypted blocks
             encrypted_blocks = [int(block) for block in text.strip().split()]
             result = rsa_pkcs_instance.decrypt_string(encrypted_blocks, private_key)
+        elif algo == 'RSA(OAEP)':
+            rsa_oaep_instance = rsa_oaep.RSA_OAEP()
+            private_key = (d, n)
+
+            # Parse encrypted blocks
+            encrypted_blocks = [int(block) for block in text.strip().split()]
+            result = rsa_oaep_instance.decrypt_string(encrypted_blocks, private_key)
         else:  # RSA_simple
             # Use RSA_SIMPLE class for decryption
             rsa_simple_instance = rsa_simple.RSA_SIMPLE()

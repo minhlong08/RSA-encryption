@@ -57,7 +57,7 @@ class RSA_OAEP(RSA):
         
         return T[:length]
     
-    def _oaep_encode(self, message: bytes, label: bytes = b'') -> bytes:
+    def _oaep_encode(self, message: bytes, key_size:int, label: bytes = b'') -> bytes:
         """
         OAEP encoding of a message.
         
@@ -80,7 +80,7 @@ class RSA_OAEP(RSA):
             ValueError: If message is too long for the key size
         """
         # Calculate sizes
-        k = self.key_size // 8 
+        k = key_size // 8 
         m_len = len(message)
         
         # Check if message is too long
@@ -113,7 +113,7 @@ class RSA_OAEP(RSA):
         
         return em
     
-    def _oaep_decode(self, encoded_message: bytes, label: bytes = b'') -> bytes:
+    def _oaep_decode(self, encoded_message: bytes, key_size: int, label: bytes = b'') -> bytes:
         """
         OAEP decoding of an encoded message.
         
@@ -134,7 +134,7 @@ class RSA_OAEP(RSA):
         Raises:
             ValueError: If decoding fails (invalid format, wrong label, etc.)
         """
-        k = self.key_size // 8
+        k = key_size // 8
         
         if len(encoded_message) != k:
             raise ValueError("Decoding error: invalid encoded message length")
@@ -193,8 +193,9 @@ class RSA_OAEP(RSA):
                 raise ValueError("No public key available. Generate keys first.")
             public_key = self.public_key
         
+        key_size = public_key[1].bit_length()
         # Apply OAEP encoding
-        encoded_message = self._oaep_encode(message, label)
+        encoded_message = self._oaep_encode(message, key_size, label)
         
         # Convert to integer
         message_int = int.from_bytes(encoded_message, byteorder='big')
@@ -225,15 +226,17 @@ class RSA_OAEP(RSA):
         # Decrypt using base RSA
         decrypted_int = super().decrypt(ciphertext, private_key)
         
+        # key_size in bits
+        key_size = private_key[1].bit_length()
         # Convert to bytes
-        k = self.key_size // 8
+        k = key_size // 8
         try:
             encoded_message = decrypted_int.to_bytes(k, byteorder='big')
         except OverflowError:
             raise ValueError("Decryption error: invalid ciphertext")
         
         # Apply OAEP decoding
-        return self._oaep_decode(encoded_message, label)
+        return self._oaep_decode(encoded_message, key_size=key_size, label= label)
     
     def encrypt_string(self, message: str, public_key: Tuple[int, int] = None, 
                       label: bytes = b'') -> List[int]:

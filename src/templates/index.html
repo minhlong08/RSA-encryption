@@ -211,6 +211,7 @@
             <option value="RSA">RSA</option>
             <option value="RSA_simple">RSA_simple</option>
             <option value="RSA(PKCS#1 v1.5)">RSA(PKCS#1 v1.5)</option>
+            <option value="RSA(OAEP)">RSA(OAEP)</option>
         </select>
         <input id="encrypt_e" placeholder="Public key e">
         <input id="encrypt_n" placeholder="Public key n">
@@ -234,6 +235,7 @@
             <option value="RSA">RSA</option>
             <option value="RSA_simple">RSA_simple</option>
             <option value="RSA(PKCS#1 v1.5)">RSA(PKCS#1 v1.5)</option>
+            <option value="RSA(OAEP)">RSA(OAEP)</option>
         </select>
         <input id="decrypt_d" placeholder="Private key d">
         <input id="decrypt_n" placeholder="Private key n">
@@ -523,7 +525,9 @@ function updateAlgoInfo() {
         encryptInfo.textContent = 'RSA uses block-based encryption based on key size';
     } else if (encryptAlgo === 'RSA(PKCS#1 v1.5)') {
         encryptInfo.textContent = 'Rsa with PKCS#1 v1.5 padding scheme';
-    } else {
+    } else if(encryptAlgo == 'RSA(OAEP)') {
+        encryptInfo.textContent = 'Rsa with OAEP padding scheme';
+    }else {
         encryptInfo.textContent = 'RSA_simple uses byte-by-byte encryption';
     }
     
