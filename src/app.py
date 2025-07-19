@@ -47,6 +47,8 @@ def encrypt():
     data = request.get_json()
     e, n, text, algo = int(data['e']), int(data['n']), data['text'], data.get('algo', 'RSA')
     
+    label = data.get('label', '')
+
     try:
         if algo == 'RSA':
             # Normal RSA with no padding
@@ -72,7 +74,9 @@ def encrypt():
             if n.bit_length() < 536:
                 return jsonify({"result": f"Key length too short, must be at least 536 bits"})
             
-            encrypted_blocks = rsa_oaep_instance.encrypt_string(text, public_key)
+            label_bytes = label.encode('utf-8') if label else b''
+            
+            encrypted_blocks = rsa_oaep_instance.encrypt_string(text, public_key, label=label_bytes)
             result = ' '.join(map(str, encrypted_blocks))
         else:  # RSA_simple
             # Naive version of RSA (inefficient, byte to byte encrypting)
@@ -90,6 +94,8 @@ def decrypt():
     data = request.get_json()
     d, n, text, algo = int(data['d']), int(data['n']), data['text'], data.get('algo', 'RSA')
     
+    label = data.get('label', '')
+
     try:
         if algo == 'RSA':
             # Use RSA class for decryption
@@ -110,9 +116,11 @@ def decrypt():
             rsa_oaep_instance = rsa_oaep.RSA_OAEP()
             private_key = (d, n)
 
+            label_bytes = label.encode('utf-8') if label else b''
+
             # Parse encrypted blocks
             encrypted_blocks = [int(block) for block in text.strip().split()]
-            result = rsa_oaep_instance.decrypt_string(encrypted_blocks, private_key)
+            result = rsa_oaep_instance.decrypt_string(encrypted_blocks, private_key, label=label_bytes)
         else:  # RSA_simple
             # Use RSA_SIMPLE class for decryption
             rsa_simple_instance = rsa_simple.RSA_SIMPLE()

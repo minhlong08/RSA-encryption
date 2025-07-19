@@ -157,6 +157,36 @@
             color: #495057;
         }
         
+        .label-field {
+            display: none;
+            background-color: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .label-field.show {
+            display: block;
+        }
+        
+        .label-field label {
+            font-weight: bold;
+            color: #0c5460;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .label-field input {
+            margin: 0;
+        }
+        
+        .label-field .help-text {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
         @media (max-width: 768px) {
             .key-container {
                 flex-direction: column;
@@ -179,6 +209,10 @@
         </select>
         <input id="keygen_bits" type="number" placeholder="Key size (e.g. 256, 512)" min="1" max="512">
         <button onclick="generateKey()">Generate Key</button>
+        
+        <p style="font-size: 0.9em; color: #666; margin-top: 6px;">
+            Note: the generated key size might not be exactly the input size and may differ by a few bits.
+        </p>
         
         <div class="key-container" id="key_container" style="display: none;">
             <div class="key-box">
@@ -216,6 +250,13 @@
         <input id="encrypt_e" placeholder="Public key e">
         <input id="encrypt_n" placeholder="Public key n">
         <button class="quick-fill-btn" onclick="quickFillEncrypt()">Quick Fill from Generated Keys</button>
+        
+        <div class="label-field" id="encrypt_label_field">
+            <label for="encrypt_label">OAEP Label:</label>
+            <input id="encrypt_label" type="text" placeholder="Optional label for OAEP (leave empty for no label)">
+            <div class="help-text">The label will be converted to bytes and used in OAEP padding. Leave empty to use no label.</div>
+        </div>
+        
         <textarea id="plaintext" placeholder="Text to encrypt" rows="3"></textarea>
         <button onclick="encryptText()">Encrypt</button>
         
@@ -240,6 +281,13 @@
         <input id="decrypt_d" placeholder="Private key d">
         <input id="decrypt_n" placeholder="Private key n">
         <button class="quick-fill-btn" onclick="quickFillDecrypt()">Quick Fill from Generated Keys</button>
+        
+        <div class="label-field" id="decrypt_label_field">
+            <label for="decrypt_label">OAEP Label:</label>
+            <input id="decrypt_label" type="text" placeholder="Label used during encryption (must match exactly)">
+            <div class="help-text">Enter the same label used during encryption. Leave empty if no label was used.</div>
+        </div>
+        
         <textarea id="cipher_in" placeholder="Encrypted text" rows="3"></textarea>
         <button class="quick-fill-btn" onclick="quickFillCiphertext()">Quick Fill from Encrypted Message</button>
         <button onclick="decryptText()">Decrypt</button>
@@ -275,6 +323,7 @@
 <script>
 // Store the last generated algorithm for quick fill
 let lastGeneratedAlgo = 'RSA';
+let lastUsedLabel = '';
 
 function generateKey() {
     const algo = document.getElementById('keygen_algo').value;
@@ -317,16 +366,29 @@ function encryptText() {
     const e = document.getElementById('encrypt_e').value;
     const n = document.getElementById('encrypt_n').value;
     const text = document.getElementById('plaintext').value;
+    const label = document.getElementById('encrypt_label').value;
     
     if (!e || !n || !text) {
-        alert('Please fill in all fields');
+        alert('Please fill in all required fields');
         return;
+    }
+    
+    // Store the label for quick fill in decryption
+    if (algo === 'RSA(OAEP)') {
+        lastUsedLabel = label;
+    }
+    
+    const requestData = {e, n, text, algo};
+    
+    // Add label to request data only if using OAEP
+    if (algo === 'RSA(OAEP)') {
+        requestData.label = label;
     }
     
     fetch('/encrypt', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({e, n, text, algo})
+        body: JSON.stringify(requestData)
     })
     .then(res => res.json())
     .then(data => {
@@ -340,16 +402,24 @@ function decryptText() {
     const d = document.getElementById('decrypt_d').value;
     const n = document.getElementById('decrypt_n').value;
     const text = document.getElementById('cipher_in').value;
+    const label = document.getElementById('decrypt_label').value;
     
     if (!d || !n || !text) {
-        alert('Please fill in all fields');
+        alert('Please fill in all required fields');
         return;
+    }
+    
+    const requestData = {d, n, text, algo};
+    
+    // Add label to request data only if using OAEP
+    if (algo === 'RSA(OAEP)') {
+        requestData.label = label;
     }
     
     fetch('/decrypt', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({d, n, text, algo})
+        body: JSON.stringify(requestData)
     })
     .then(res => res.json())
     .then(data => {
@@ -473,6 +543,7 @@ function quickFillEncrypt() {
     document.getElementById('encrypt_n').value = publicN;
     document.getElementById('encrypt_algo').value = lastGeneratedAlgo;
     updateAlgoInfo();
+    toggleLabelFields();
 }
 
 function quickFillDecrypt() {
@@ -487,7 +558,14 @@ function quickFillDecrypt() {
     document.getElementById('decrypt_d').value = privateD;
     document.getElementById('decrypt_n').value = privateN;
     document.getElementById('decrypt_algo').value = lastGeneratedAlgo;
+    
+    // Fill the label if OAEP was used for encryption
+    if (lastGeneratedAlgo === 'RSA(OAEP)' && lastUsedLabel) {
+        document.getElementById('decrypt_label').value = lastUsedLabel;
+    }
+    
     updateAlgoInfo();
+    toggleLabelFields();
 }
 
 function quickFillCiphertext() {
@@ -516,21 +594,39 @@ function quickFillBreak() {
 
 function updateAlgoInfo() {
     const encryptAlgo = document.getElementById('encrypt_algo').value;
-    const decryptAlgo = document.getElementById('decrypt_algo').value;
-    
     const encryptInfo = document.getElementById('encrypt_algo_info');
-    const decryptInfo = document.getElementById('decrypt_algo_info');
     
     if (encryptAlgo === 'RSA') {
         encryptInfo.textContent = 'RSA uses block-based encryption based on key size';
     } else if (encryptAlgo === 'RSA(PKCS#1 v1.5)') {
-        encryptInfo.textContent = 'Rsa with PKCS#1 v1.5 padding scheme';
-    } else if(encryptAlgo == 'RSA(OAEP)') {
-        encryptInfo.textContent = 'Rsa with OAEP padding scheme';
-    }else {
+        encryptInfo.textContent = 'RSA with PKCS#1 v1.5 padding scheme';
+    } else if(encryptAlgo === 'RSA(OAEP)') {
+        encryptInfo.textContent = 'RSA with OAEP padding scheme. You can specify an optional label for additional security.';
+    } else {
         encryptInfo.textContent = 'RSA_simple uses byte-by-byte encryption';
     }
+}
+
+function toggleLabelFields() {
+    const encryptAlgo = document.getElementById('encrypt_algo').value;
+    const decryptAlgo = document.getElementById('decrypt_algo').value;
     
+    const encryptLabelField = document.getElementById('encrypt_label_field');
+    const decryptLabelField = document.getElementById('decrypt_label_field');
+    
+    // Show/hide encrypt label field
+    if (encryptAlgo === 'RSA(OAEP)') {
+        encryptLabelField.classList.add('show');
+    } else {
+        encryptLabelField.classList.remove('show');
+    }
+    
+    // Show/hide decrypt label field
+    if (decryptAlgo === 'RSA(OAEP)') {
+        decryptLabelField.classList.add('show');
+    } else {
+        decryptLabelField.classList.remove('show');
+    }
 }
 
 function copyToClipboard(elementId) {
@@ -578,11 +674,19 @@ function copyToClipboard(elementId) {
 
 // Add event listeners for algorithm selection changes
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('encrypt_algo').addEventListener('change', updateAlgoInfo);
-    document.getElementById('decrypt_algo').addEventListener('change', updateAlgoInfo);
+    document.getElementById('encrypt_algo').addEventListener('change', function() {
+        updateAlgoInfo();
+        toggleLabelFields();
+    });
     
-    // Initialize algorithm info
+    document.getElementById('decrypt_algo').addEventListener('change', function() {
+        updateAlgoInfo();
+        toggleLabelFields();
+    });
+    
+    // Initialize algorithm info and label field visibility
     updateAlgoInfo();
+    toggleLabelFields();
 });
 </script>
 
