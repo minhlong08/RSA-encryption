@@ -8,7 +8,7 @@ import json
 from rsa_oaep import RSA_OAEP
 
 # generating keys
-rsa_instance = RSA_OAEP(1024)
+rsa_instance = RSA_OAEP(2048)
 public_key, private_key = rsa_instance.generate_keypair()
 partner_key = None
 
@@ -28,14 +28,14 @@ if choice == '1':
     client.send(public_key_json.encode())
 
     # Receiving the key
-    data = client.recv(1024).decode()
+    data = client.recv(2048).decode()
     partner_key = tuple(json.loads(data))
 elif choice == '2':
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect(("192.168.86.25",9999))      # use your local IP address on host machine
 
     # Receiving the key
-    data = client.recv(1024).decode()
+    data = client.recv(2048).decode()
     partner_key = tuple(json.loads(data))
 
     # sending the key
@@ -56,7 +56,7 @@ def send_message(c):
 
 def receive_message(c):
     while True:
-        receive = c.recv(1024).decode()
+        receive = c.recv(2048).decode()
         message = rsa_instance.decrypt_string(json.loads(receive), private_key)
 
         print("Your friend: " + message)
