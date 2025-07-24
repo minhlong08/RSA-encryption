@@ -20,7 +20,7 @@ SMALL_PRIMES = [
 
 class MathUtils:
     @staticmethod
-    def is_prime(n: int, k: int = 5) -> bool:
+    def is_prime(n: int, k: int = 100) -> bool:
         """
         Miller-Rabin primality test.
         Returns True if n is probably prime, False if composite.
@@ -37,8 +37,7 @@ class MathUtils:
                 return False
         
         # Start the Miller-Rabin test
-
-        # Write n-1 as d * 2^r
+        # Write n-1 = d * 2^r
         r = 0
         d = n - 1
         while d % 2 == 0:

@@ -32,7 +32,7 @@ if choice == '1':
     partner_key = tuple(json.loads(data))
 elif choice == '2':
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(("192.168.86.25",9999))      # use your local IP address on host machine
+    client.connect(("192.168.86.25",8888))      # use your local IP address on host machine
 
     # Receiving the key
     data = client.recv(2048).decode()

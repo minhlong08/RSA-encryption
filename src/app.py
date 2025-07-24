@@ -78,7 +78,7 @@ def encrypt():
             
             encrypted_blocks = rsa_oaep_instance.encrypt_string(text, public_key, label=label_bytes)
             result = ' '.join(map(str, encrypted_blocks))
-        else:  # RSA_simple
+        else:
             # Naive version of RSA (inefficient, byte to byte encrypting)
             rsa_simple_instance = rsa_simple.RSA_SIMPLE()
             public_key = (e, n)
@@ -98,7 +98,6 @@ def decrypt():
 
     try:
         if algo == 'RSA':
-            # Use RSA class for decryption
             rsa_instance = rsa.RSA()
             private_key = (d, n)
             
@@ -121,8 +120,7 @@ def decrypt():
             # Parse encrypted blocks
             encrypted_blocks = [int(block) for block in text.strip().split()]
             result = rsa_oaep_instance.decrypt_string(encrypted_blocks, private_key, label=label_bytes)
-        else:  # RSA_simple
-            # Use RSA_SIMPLE class for decryption
+        else:
             rsa_simple_instance = rsa_simple.RSA_SIMPLE()
             private_key = (d, n)
             
@@ -151,10 +149,8 @@ def break_rsa():
         try:
             start = time.time()
             
-            # All breaking algorithms expect a tuple (e, n) as public_key parameter
             public_key = (e, n)
             
-            # Pass the stop_event to the breaking algorithm
             private_key_tuple = BREAKING_ALGOS[algo](public_key, stop_event)
             
             end = time.time()
@@ -180,13 +176,12 @@ def break_rsa():
     thread = threading.Thread(target=target)
     thread.start()
     running_threads['breaker'] = thread
-    thread.join(timeout=86400)  # 1 day
+    thread.join(timeout=86400)  # 1 day max run time
 
     if thread.is_alive():
         result["result"] = "Breaking algorithm takes too long."
-        stop_event.set()  # Signal the thread to stop
+        stop_event.set()
     
-    # Clean up
     if 'breaker' in running_threads:
         del running_threads['breaker']
     if 'breaker' in stop_events:
@@ -200,13 +195,9 @@ def stop_break():
     stop_event = stop_events.get('breaker')
     
     if thread and thread.is_alive() and stop_event:
-        # Signal the thread to stop
         stop_event.set()
-        
-        # Wait a bit for the thread to finish gracefully
         thread.join(timeout=2)
         
-        # Clean up
         if 'breaker' in running_threads:
             del running_threads['breaker']
         if 'breaker' in stop_events:

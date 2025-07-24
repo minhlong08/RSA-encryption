@@ -1,5 +1,7 @@
-import math
-from typing import List
+"""
+An demo attack script of a chosen ciphertext attack on RSA-PKCS#1 v1.5
+This attack is called the Bleichenbacher attack
+"""
 from rsa_pkcs import RSAWithPKCS1
 import time
 
@@ -100,7 +102,7 @@ def bleichenbacher_attack(ciphertext: int, rsa: RSAWithPKCS1):
                 if not found:
                     r += 1
                     # Safety check to prevent infinite loops
-                    if search_count > 100000:
+                    if search_count > 10000000:
                         print("[!] Search taking too long")
                         return None
 
@@ -148,7 +150,7 @@ def main():
     rsa = RSAWithPKCS1(key_size=256)
     rsa.generate_keypair()
     
-    plaintext = input("Enter the message you want to encrypt (keep it short): ")
+    plaintext = input("Enter the message you want to encrypt): ")
     print(f"[*] Plaintext: '{plaintext}'")
 
     ciphertext = rsa.encrypt_string(plaintext)

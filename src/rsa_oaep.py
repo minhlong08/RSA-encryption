@@ -71,6 +71,7 @@ class RSA_OAEP(RSA):
         
         Args:
             message (bytes): Message to be encoded
+            key_size (bytes): key size
             label (bytes): Optional label to be associated with message
             
         Returns:
@@ -79,8 +80,8 @@ class RSA_OAEP(RSA):
         Raises:
             ValueError: If message is too long for the key size
         """
-        # Calculate sizes
-        k = key_size // 8 
+
+        k = key_size
         m_len = len(message)
         
         # Check if message is too long
@@ -126,6 +127,7 @@ class RSA_OAEP(RSA):
         
         Args:
             encoded_message (bytes): OAEP encoded message
+            key_size (bytes): key size
             label (bytes): Optional label that was associated with message
             
         Returns:
@@ -134,7 +136,7 @@ class RSA_OAEP(RSA):
         Raises:
             ValueError: If decoding fails (invalid format, wrong label, etc.)
         """
-        k = key_size // 8
+        k = key_size
         
         if len(encoded_message) != k:
             raise ValueError("Decoding error: invalid encoded message length")
@@ -193,7 +195,10 @@ class RSA_OAEP(RSA):
                 raise ValueError("No public key available. Generate keys first.")
             public_key = self.public_key
         
-        key_size = public_key[1].bit_length()
+        e,n = public_key
+
+        # key size in bytes
+        key_size = RSA.calculate_key_size_bytes(n)
         # Apply OAEP encoding
         encoded_message = self._oaep_encode(message, key_size, label)
         
@@ -223,15 +228,17 @@ class RSA_OAEP(RSA):
                 raise ValueError("No private key available. Generate keys first.")
             private_key = self.private_key
         
+        d, n = private_key
+
         # Decrypt using base RSA
         decrypted_int = super().decrypt(ciphertext, private_key)
         
-        # key_size in bits
-        key_size = private_key[1].bit_length()
-        # Convert to bytes
-        k = key_size // 8
+
+        # Convert key_size to bytes
+        key_size = RSA.calculate_key_size_bytes(n)
+
         try:
-            encoded_message = decrypted_int.to_bytes(k, byteorder='big')
+            encoded_message = decrypted_int.to_bytes(key_size, byteorder='big')
         except OverflowError:
             raise ValueError("Decryption error: invalid ciphertext")
         
@@ -260,8 +267,9 @@ class RSA_OAEP(RSA):
         
         message_bytes = message.encode('utf-8')
         
+        e, n = public_key
         # Calculate maximum message size per block for OAEP
-        k = self.key_size // 8
+        k = (n.bit_length() - 1) // 8
         max_message_size = k - 2 * self.hash_length - 2
         
         encrypted_blocks = []
@@ -388,7 +396,7 @@ def main():
         oaep_enc2 = rsa_oaep.encrypt_string(short_message)
         print(f"Encryption 1 (first block): {oaep_enc1[0]}")
         print(f"Encryption 2 (first block): {oaep_enc2[0]}")
-        print(f"Same ciphertext: {oaep_enc1 == oaep_enc2}")
+        print(f"Same ciphertext (should be false): {oaep_enc1 == oaep_enc2}")
         
         # Verify both decrypt correctly
         dec1 = rsa_oaep.decrypt_string(oaep_enc1)

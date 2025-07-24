@@ -1,3 +1,6 @@
+"""
+Benchmark file testing how many divisions per second can your machine do
+"""
 import time
 
 N = 10_000_000

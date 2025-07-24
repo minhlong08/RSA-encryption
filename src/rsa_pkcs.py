@@ -24,7 +24,7 @@ class RSAWithPKCS1(RSA):
         
         Args:
             data: The data to pad
-            target_length: Target length in bytes (should be key_size // 8)
+            target_length: Target length in bytes (should be size of key in bytes)
             block_type: 2 for encryption
         
         Returns:
@@ -34,7 +34,7 @@ class RSAWithPKCS1(RSA):
             raise ValueError("Data too long for PKCS#1 v1.5 padding")
         
         # PKCS#1 v1.5 format: 0x00 || BT || PS || 0x00 || D
-        # Where BT is block type, PS is padding string, D is data
+        # Where BT is block type which is 0x02 for encryption, PS is padding string, D is data
         
         padding_length = target_length - len(data) - 3
         
@@ -113,7 +113,7 @@ class RSAWithPKCS1(RSA):
         e, n = public_key
         
         # Calculate key length in bytes
-        key_length = (n.bit_length() + 7) // 8
+        key_length = RSA.calculate_key_size_bytes(n)
         
         # Apply PKCS#1 v1.5 padding
         padded_data = self._pkcs1_v15_pad(data, key_length, block_type=2)
@@ -145,7 +145,7 @@ class RSAWithPKCS1(RSA):
         decrypted_int = super().decrypt(ciphertext, private_key)
         
         # Calculate key length in bytes
-        key_length = (n.bit_length() + 7) // 8
+        key_length = RSA.calculate_key_size_bytes(n)
         
         # Convert integer back to bytes
         decrypted_bytes = decrypted_int.to_bytes(key_length, byteorder='big')
@@ -177,7 +177,7 @@ class RSAWithPKCS1(RSA):
         
         if use_padding:
             # Calculate maximum data size per block (accounting for PKCS#1 v1.5 padding overhead)
-            key_length = (n.bit_length() + 7) // 8
+            key_length = RSA.calculate_key_size_bytes(n)
             max_data_size = key_length - 11  # PKCS#1 v1.5 requires 11 bytes overhead
             
             for i in range(0, len(message_bytes), max_data_size):

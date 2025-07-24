@@ -31,7 +31,6 @@ class BREAKING_RSA:
         e = public_key[0]
         n = public_key[1]
         for i in range(2, int(n**0.5) + 1):
-            # Check if stop was requested
             if stop_event.is_set():
                 return (None, None)
             
@@ -74,7 +73,6 @@ class BREAKING_RSA:
         iteration_count = 0
         
         while True:
-            # Check if stop was requested every 1000 iterations for performance
             if iteration_count % 1000 == 0 and stop_event.is_set():
                 return (None, None)
             
@@ -133,7 +131,6 @@ class BREAKING_RSA:
         iteration_count = 0
 
         while d == 1:
-            # Check if stop was requested every 1000 iterations for performance
             if iteration_count % 1000 == 0 and stop_event.is_set():
                 return (None, None)
             

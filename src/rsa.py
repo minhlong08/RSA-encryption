@@ -26,6 +26,20 @@ class RSA:
         """
         return self.key_size
     
+    @staticmethod
+    def calculate_key_size_bytes(n: int) -> int:
+        """
+        Calculate the key size in bytes
+        """
+        return (n.bit_length() + 7) // 8
+    
+    @staticmethod
+    def calculate_key_size_bits(n: int) -> int:
+        """
+        Calculate the key size in bits
+        """
+        return n.bit_length()
+    
     
     def generate_keypair(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         """
@@ -145,7 +159,7 @@ class RSA:
 # Example usage and demonstration
 if __name__ == "__main__":
     # Create RSA instance with smaller key size for faster demonstration
-    rsa = RSA(key_size=16)  # Use 2048 or higher for real applications
+    rsa = RSA(key_size=1024)  # Use 2048 or higher for real applications
     
     startime = time.time()
     print("Generating RSA key pair...")
