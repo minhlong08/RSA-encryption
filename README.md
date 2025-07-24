@@ -15,7 +15,8 @@ This repository contains my personal implementation of the RSA encryption algori
 - ✅ Encrypt messages using the public key
 - ✅ Decrypt messages using the private key
 - ✅ Support for arbitrary-length messages (split into blocks)
-- ✅ All logic implemented manually — no use of external cryptography libraries
+- ✅ Breaking RSA: factorising RSA key and chosen ciphertext attack
+- ✅ Application of RSA: End-to-end encrypted chat
 
 ## 🛠️ Tech Stack
 
@@ -31,5 +32,8 @@ This repository contains my personal implementation of the RSA encryption algori
 - breaking_rsa: algorithm to factor RSA keys
 - bleichenbacher_attack.py: simple demo of bleichenbacher chosen ciphertext attack on RSA PKCS#1 v1.5
 - app.py: flask backend for demo purposes
+- chat.py: version 1 of end to end encrypted chat
+- chatv2.py: version 2 of end to edn encrypted chat (has message authentication using HMAC)
+- mitm_tamper.py: Man in the middle attack script
 - rsa_demo.py: GUI demo for RSA (obsolete)
 
